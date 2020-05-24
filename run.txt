@@ -6,3 +6,6 @@ python -m unittest tests.unit.test_animals
 
 #for continuous testing, type the commmand below in terminal
 watch -n 10 ./watcher.sh
+
+# Activate conda env
+source activate pathPlaning
