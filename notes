@@ -1,0 +1,58 @@
+1 2 3 4 5 6 7 8 9 #1
+2 3 4 5 6 7 8 9 10 #2
+3 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+
+
+move
+explored
+not_explored
+position=[0,0]
+possible_moves ( u:[-1, 0], d:[1, 0], l:[0, -1], r:[0, 1])
+invalid_moves
+distance
+check_goal
+grid = [9 x 9]
+
+STEPS:
+1- before making a move, update all variable according to the positions
+position [0, 0]
+valid moves = input--> position [0,0] -> returns index of possible locations(right, down)  [0, 1] [1, 1] 
+findDistance = input -> index of valid moves -  [0, 1] - [0, 0] = [0, 1] and [1, 1] - [0, 0] = [1, 1] returns possible moves with distance --> {1: [[0, 1], [1, 1]]} 
+possible_moves =  input-> {1: [[0, 1], [1, 1]]} ---> updates not_explored.add(input)
+not_explored = input -> from possible_moves
+explored = [position]
+
+* 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+
+2. Move
+move = Input -> not_explored 
+	choose from the first one sorted not_explored dictionary which is 1:[[0, 1], [1, 1]] 
+	choose [0, 1] check explored list to make sure the choosen position is not in there
+	if choosen position is in explored_list pop that choosen_position from explored_list and choose another position
+	if it's not in explored list add it to explored_list = 1: [[1, 1]], explored = [ [0, 0], [1, 1]]
+	
+	updated position pos.update([0, 1])
+
+* 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0
+

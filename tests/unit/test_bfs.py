@@ -43,3 +43,22 @@ class TestValidMoves(unittest.TestCase):
         test_moves = get_valid_moves(moves, position, grid)
         assert len(test_moves) == exp_num_of_moves
         self.assertTrue(np.array_equal(test_moves, expected_moves))
+
+
+class TestDistance(unittest.TestCase):
+    def setUp(self):
+        self.position = np.array([4, 4])
+        self.valid_moves = get_valid_moves(moves, self.position, grid)
+
+    def test_position_4_4_should_have_4_valid_moves(self):
+        assert len(self.valid_moves) == 4
+
+    def test_position_4_4_should_have_distance_8(self):
+        distance = get_distance(self.position)  # return {}
+        self.assertEqual(distance, 8)
+
+    def test_position_4_4_at_distance_7_should_have_2_valid_moves(self):
+        """ distance dictionary should retrun {7:[[4, 3]. [3, 4]], 9:[[4, 5], [5, 4]]}"""
+        ds = get_distance_all_valid_moves(self.valid_moves, self.position)
+        self.assertEqual(len(ds), 2)
+        self.assertEqual(len(ds[7]), 2)

@@ -6,9 +6,9 @@ grid = np.array(
         [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],  # Row 0
         [0, 1, 1, 0, 0, 0, 0, 1, 0, 0],  # Row 1
         [0, 1, 1, 0, 0, 0, 0, 0, 0, 0],  # Row 2
-        [0, 1, 1, 0, 0, 0, 0, 0, 0, 0],  # Row 3
-        [0, 1, 1, 0, 0, 0, 0, 0, 0, 0],  # Row 4
-        [0, 1, 1, 0, 0, 0, 0, 0, 0, 0],  # Row 5
+        [0, 1, 1, 0, 7, 0, 0, 0, 0, 0],  # Row 3
+        [0, 1, 1, 7, 0, 9, 0, 0, 0, 0],  # Row 4
+        [0, 1, 1, 0, 9, 0, 0, 0, 0, 0],  # Row 5
         [0, 1, 1, 0, 0, 0, 0, 0, 0, 0],  # Row 6
         [0, 1, 1, 0, 0, 0, 0, 0, 0, 0],  # Row 7
         [0, 1, 1, 0, 0, 0, 0, 0, 0, 0],  # Row 8
@@ -44,3 +44,24 @@ def get_valid_moves(moves, position, grid):
 
     return np.array(valid_moves)
 
+
+def get_distance(position):
+    return position[0] + position[1]
+
+
+def get_distance_all_valid_moves(valid_moves, position):
+    """This function return a dictionary of possible moves
+        with their distances as keys
+    """
+    temPos = None
+    ds = {}
+    for move in valid_moves:
+        temPos = position + move
+        key = get_distance(temPos)
+        if key not in ds:
+            ds[key] = []
+            ds.get(key).append(temPos)
+        else:
+            ds.get(key).append(temPos)
+
+    return ds
