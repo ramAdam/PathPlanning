@@ -22,23 +22,36 @@ moves = {
     "r": np.array([0, 1]),
     "l": np.array([0, -1]),
 }
+# explored = [np.array([0, 0])]
 
 
-def get_valid_moves(moves, position, grid):
+def isin_explored(position, explored):
+    flag = False
+    for e in explored:
+        if np.array_equal(position, e):
+            return True
+    return flag
+
+
+def get_valid_moves(moves, position, grid, explored):
     """
-    This function takes a dictionary of moves and return only valid moves
+    This function takes a dictionary of moves, position, explored positions and returns valid moves
     """
+    ROW_IDX = 0
+    COL_IDX = 1
+    WALL = 1
     pos = None
     valid_moves = []
     for _, move in moves.items():
         pos = move + position
         # checking row and column bounds and walls, adding valid moves only
         if (
-            pos[0] >= 0
-            and pos[0] <= 9
-            and pos[1] >= 0
-            and pos[1] <= 9
-            and grid[pos[0], pos[1]] != 1
+            pos[ROW_IDX] >= 0
+            and pos[ROW_IDX] <= 9
+            and pos[COL_IDX] >= 0
+            and pos[COL_IDX] <= 9
+            and grid[pos[ROW_IDX], pos[COL_IDX]] != WALL
+            and not isin_explored(pos, explored)
         ):
             valid_moves.append(move)
 
@@ -51,7 +64,7 @@ def get_distance(position):
 
 def get_distance_all_valid_moves(valid_moves, position):
     """This function return a dictionary of possible moves
-        with their distances as keys
+        with their corresponding distance as keys
     """
     temPos = None
     ds = {}
