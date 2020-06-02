@@ -92,3 +92,74 @@ class TestIsInExplored(unittest.TestCase):
     def test_position_in_expolored_should_return_false(self):
         position = np.array([2, 1])
         self.assertFalse(isin_explored(position, self.exp))
+
+
+class TestMove(unittest.TestCase):
+    def setUp(self):
+        self.position = np.array([0, 0])
+        self.explored = [np.array([0, 0])]
+        self.not_explored = {}
+        self.goal_found = False
+        self.bfs = Bfs(self.position, self.explored,
+                       self.not_explored, self.goal_found, grid)
+
+    def testMove(self):
+        """ at position 0 0 initial state should be 
+            position = [0, 0]
+            explored = []
+            not_explored = {}
+            goal_found = false 
+        """
+
+        self.bfs.move()
+        valid_moves_distance_one = self.bfs._not_explored[1]
+        expected_valid_moves_at_distance_one = [
+            np.array([1, 0]), np.array([0, 1])]
+        two_possible_moves = 2
+        DISTANCE_ONE = 1
+        assert len(self.bfs._not_explored[DISTANCE_ONE]) == two_possible_moves
+        self.assertTrue(np.array_equal(valid_moves_distance_one,
+                                       expected_valid_moves_at_distance_one))
+
+    def test_min_distance_dictionary(self):
+        self.bfs.move()
+        assert len(self.bfs._not_explored) == 1
+
+        self.assertEqual(self.bfs._get_min_distance_key(), 1)
+
+    def test_min_distance_empty_error(self):
+        """min distance should return zero if the not_explored dictionary is empty"""
+        assert len(self.bfs._not_explored) == 0
+        self.assertEqual(self.bfs._get_min_distance_key(), None)
+
+    def test_pick_moves_at_a_given_distance(self):
+        """pick min moves should return 2 valid moves at distance 1"""
+        self.bfs.move()
+
+        assert len(self.bfs._not_explored[1]) == 2
+        MIN_DISTANCE = self.bfs._get_min_distance_key()
+
+        assert MIN_DISTANCE == 1
+
+        moves = self.bfs._pick_moves_at(MIN_DISTANCE)
+        assert len(moves) == 2
+
+    def test_distance_1_has_one_move_left_should_push_last_move_to_explored(self):
+        """"""
+
+        self.bfs._not_explored = {1: [np.array([1, 0])]}
+        DISTANCE_ONE = 1
+        ZERO = 0
+        TWO = 2
+        valid_moves = self.bfs._pick_moves_at(DISTANCE_ONE)
+        min_distance = self.bfs._get_min_distance_key()
+        assert len(valid_moves) == 1
+
+        self.assertTrue(np.array_equal(self.bfs._pick_a_move_from(
+            valid_moves, min_distance), np.array([1, 0])))
+
+        LENGTH_OF_NOT_EXPLORED = len(self.bfs._not_explored)
+        LENGTH_OF_EXPLORED = len(self.bfs._explored)
+
+        assert LENGTH_OF_NOT_EXPLORED == ZERO
+        assert LENGTH_OF_EXPLORED == TWO
