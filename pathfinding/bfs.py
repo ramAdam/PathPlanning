@@ -100,26 +100,31 @@ def move(position, explored, main_not_explored, goal_found, grid):
 
 class Bfs:
 
-    def __init__(self, position, explored, not_explored, goal_found, grid):
+    def __init__(self, position, explored, not_explored, goal_found, grid, goal):
         self._position = position
         self._explored = explored
         self._not_explored = not_explored
         self._goal_found = goal_found
-        self._valid_moves = []
+        self._goal = goal
+        self._grid = grid
+        # self._valid_moves = []
 
     def move(self):
         """returns None if all positions are explored and goal is not found"""
-        self._set_valid_moves()
-        self._check_goal()
-        self.set_distance_all_valid_moves()
+        valid_moves = self._get_valid_moves()
+        found = self._check_goal(valid_moves)
+
+        if found is not None:
+            return found
+
+        self.set_distance_all_valid_moves(valid_moves)
 
         min_distance = self._get_min_distance_key()
         if min_distance is None:
             return None
-        valid_moves = self._pick_moves_at(min_distance)
-        pdb.set_trace()
-        picked_move = self._pick_a_move_from(valid_moves, min_distance)
-        #
+        moves = self._pick_moves_at(min_distance)
+        picked_move = self._pick_a_move_from(moves, min_distance)
+        self._position = self._position + picked_move
 
     def _pick_a_move_from(self, valid_moves, distance):
         """returns a valid move, also updates not_explored and explored"""
@@ -149,10 +154,17 @@ class Bfs:
 
         return min_distance
 
-    def _check_goal(self):
-        pass
+    def _check_goal(self, valid_moves):
+        temPos = None
+        for move in valid_moves:
+            temPos = self._position + move
 
-    def _set_valid_moves(self):
+            if self._grid[temPos[0], temPos[1]] == self._goal:
+                self._goal_found = True
+                return temPos
+        return None
+
+    def _get_valid_moves(self):
         """
         This function takes a dictionary of moves, position, explored positions and returns valid moves
 
@@ -167,6 +179,12 @@ class Bfs:
         COL_IDX = 1
         WALL = 1
         pos = None
+        moves = {
+            "u": np.array([-1, 0]),
+            "d": np.array([1, 0]),
+            "r": np.array([0, 1]),
+            "l": np.array([0, -1]),
+        }
         valid_moves = []
         for _, move in moves.items():
             pos_idx = move + self._position
@@ -179,26 +197,32 @@ class Bfs:
                 and grid[pos_idx[ROW_IDX], pos_idx[COL_IDX]] != WALL
                 and not self._isin_explored(pos_idx, self._explored)
             ):
-                self._valid_moves.append(move)
+                valid_moves.append(move)
+        return valid_moves
 
-    def set_distance_all_valid_moves(self):
+    def set_distance_all_valid_moves(self, valid_moves_idx):
         """This function return a dictionary of possible moves
             at a position with their corresponding distance as keys
+
+            Parameters
+            ----------
+            valid_moves_idx : [np.array([])]
+
         """
         temPos = None
         # ds = {}
-        for move in self._valid_moves:
+        for move in valid_moves_idx:
             temPos = self._position + move
-            key = get_distance(temPos)
+            key = self._get_distance(temPos)
             if key not in self._not_explored:
                 self._not_explored[key] = []
                 self._not_explored.get(key).append(temPos)
             else:
                 self._not_explored.get(key).append(temPos)
 
-    def _get_distance(self):
+    def _get_distance(self, temPos):
         """ returns a distance from position [0, 0]"""
-        return self._position[0] + self._position[1]
+        return temPos[0] + temPos[1]
 
     def _isin_explored(self, position, explored):
         flag = False
