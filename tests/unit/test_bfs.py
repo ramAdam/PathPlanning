@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 from pathfinding import *
 import pdb
+from tests.data import grid
 
 
 class TestValidMoves(unittest.TestCase):
@@ -101,8 +102,7 @@ class TestMove(unittest.TestCase):
         self.not_explored = {}
         self.goal_found = False
         self.goal = 99
-        self.bfs = Bfs(self.position, self.explored,
-                       self.not_explored, self.goal_found, grid, self.goal)
+        self.bfs = Bfs(self.position, grid, self.goal)
 
     def test_min_distance_dictionary(self):
         self.bfs.move()
@@ -132,12 +132,15 @@ class TestMove(unittest.TestCase):
             function should decrease the size of not_explored by 1 and increase
             the size of explored by 1
         """
-        pdb.set_trace()
+
         # given distance at 1 should have only one move left
-        self.bfs._not_explored = {1: [np.array([1, 0])]}
+        s = set()
+        s.add(tuple(np.array([1, 0])))
+        self.bfs._not_explored = {1: s}
         DISTANCE_ONE = 1
         ZERO = 0
         TWO = 2
+
         valid_moves = self.bfs._pick_moves_at(DISTANCE_ONE)
         min_distance = self.bfs._get_min_distance_key()
         assert len(valid_moves) == 1
@@ -149,6 +152,7 @@ class TestMove(unittest.TestCase):
         LENGTH_OF_EXPLORED = len(self.bfs._explored)
 
         assert LENGTH_OF_NOT_EXPLORED == ZERO
+        # pdb.set_trace()
         assert LENGTH_OF_EXPLORED == TWO
 
     def test_valid_moves(self):

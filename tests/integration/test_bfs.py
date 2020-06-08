@@ -13,17 +13,10 @@ class TestBfs(unittest.TestCase):
         # self.not_explored = {}
         self.goal_found = False
         self.goal = 99
-        self.bfs = Bfs(self.position, self.explored,
-                       self.goal_found, wallgrid, self.goal)
+        self.bfs = Bfs(self.position, wallgrid, self.goal)
 
     def testMove(self):
-        """ at position 0 0 after a move the state should be 
-            position = [0, 1]
-            explored = [[0, 0], [1, 0]]
-            n
-            not_explored = {1: [[1, 0]]}
-            goal_found = false 
-        """
+        """given a wall grid with a position (0, 0)"""
         # pdb.set_trace()
         self.bfs.move()
         assert self.bfs._goal_found == False
@@ -34,7 +27,7 @@ class TestBfs(unittest.TestCase):
         assert len(self.bfs._explored) == 2
 
     def test_goal_position(self):
-        """given goal 99 is at position 7 7, bfs position should be set to 7, 7"""
+        """given goal 99 is at position (7 7), bfs position should be set to (7, 7)"""
 
         while not self.bfs._goal_found:
             self.bfs.move()
@@ -42,6 +35,7 @@ class TestBfs(unittest.TestCase):
         assert np.array_equal(self.bfs._position, np.array([7, 7]))
 
     def test_goal_found(self):
+        "given goal 99 in the grid, it should find the goal"
         while not self.bfs._goal_found:
             # pdb.set_trace()
             self.bfs.move()
@@ -52,7 +46,7 @@ class TestBfs(unittest.TestCase):
         pass
 
     def test_position_above_the_goal(self):
-        """given position 6, 7, goal_found should be True"""
+        """given position above the goal (6, 7), goal_found should be True"""
         self.bfs._position = np.array([6, 7])
         # pdb.set_trace()
         assert np.array_equal(self.bfs.move(), np.array([7, 7]))
