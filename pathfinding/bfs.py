@@ -1,5 +1,6 @@
 import numpy as np
 import pdb
+from tests.data import wallgrid as grid
 
 grid = np.array(
     [
@@ -100,13 +101,19 @@ def move(position, explored, main_not_explored, goal_found, grid):
 
 class Bfs:
 
-    def __init__(self, position, explored, not_explored, goal_found, grid, goal):
+    def __init__(self, position, explored, goal_found, grid, goal):
         self._position = position
         self._explored = explored
-        self._not_explored = not_explored
+        self._not_explored = dict()
         self._goal_found = goal_found
         self._goal = goal
         self._grid = grid
+        self._moves = {
+            "u": np.array([-1, 0]),
+            "d": np.array([1, 0]),
+            "r": np.array([0, 1]),
+            "l": np.array([0, -1]),
+        }
         # self._valid_moves = []
 
     def move(self):
@@ -115,6 +122,7 @@ class Bfs:
         found = self._check_goal(valid_moves)
 
         if found is not None:
+            self._position = found
             return found
 
         self.set_distance_all_valid_moves(valid_moves)
@@ -122,9 +130,9 @@ class Bfs:
         min_distance = self._get_min_distance_key()
         if min_distance is None:
             return None
-        moves = self._pick_moves_at(min_distance)
-        picked_move = self._pick_a_move_from(moves, min_distance)
-        self._position = self._position + picked_move
+        movs = self._pick_moves_at(min_distance)
+        picked_move = self._pick_a_move_from(movs, min_distance)
+        self._position = picked_move
 
     def _pick_a_move_from(self, valid_moves, distance):
         """returns a valid move, also updates not_explored and explored"""
@@ -148,13 +156,19 @@ class Bfs:
         """returns None if there are no elments left in not_explored otherwise returns the next key"""
         min_distance = None
         try:
-            min_distance = next(iter(self._not_explored))
+            # pdb.set_trace()
+            min_distance = next(iter(sorted(self._not_explored)))
         except StopIteration:
             min_distance = None
 
         return min_distance
 
     def _check_goal(self, valid_moves):
+        """return the position of the goal if goal found, also sets the goal_found to be True"""
+        if self._grid[self._position[0], self._position[1]] == self._goal:
+            self._goal_found = True
+            return self._position
+
         temPos = None
         for move in valid_moves:
             temPos = self._position + move
@@ -179,14 +193,14 @@ class Bfs:
         COL_IDX = 1
         WALL = 1
         pos = None
-        moves = {
-            "u": np.array([-1, 0]),
-            "d": np.array([1, 0]),
-            "r": np.array([0, 1]),
-            "l": np.array([0, -1]),
-        }
+        # moves = {
+        #     "u": np.array([-1, 0]),
+        #     "d": np.array([1, 0]),
+        #     "r": np.array([0, 1]),
+        #     "l": np.array([0, -1]),
+        # }
         valid_moves = []
-        for _, move in moves.items():
+        for _, move in self._moves.items():
             pos_idx = move + self._position
             # checking row and column bounds and walls, adding valid moves only
             if (
@@ -214,10 +228,11 @@ class Bfs:
         for move in valid_moves_idx:
             temPos = self._position + move
             key = self._get_distance(temPos)
+            # pdb.set_trace()
             if key not in self._not_explored:
                 self._not_explored[key] = []
                 self._not_explored.get(key).append(temPos)
-            else:
+            elif not self._isin_explored(temPos, self._not_explored.get(key)):
                 self._not_explored.get(key).append(temPos)
 
     def _get_distance(self, temPos):

@@ -104,17 +104,6 @@ class TestMove(unittest.TestCase):
         self.bfs = Bfs(self.position, self.explored,
                        self.not_explored, self.goal_found, grid, self.goal)
 
-    def testMove(self):
-        """ at position 0 0 initial state should be 
-            position = [0, 0]
-            explored = [[0, 0]]
-            not_explored = {}
-            goal_found = false 
-        """
-        self.bfs.move()
-        assert self.bfs._goal_found == False
-        assert np.array_equal(self.bfs._position, np.array([0, 1]))
-
     def test_min_distance_dictionary(self):
         self.bfs.move()
         assert len(self.bfs._not_explored) == 1
@@ -143,6 +132,7 @@ class TestMove(unittest.TestCase):
             function should decrease the size of not_explored by 1 and increase
             the size of explored by 1
         """
+        pdb.set_trace()
         # given distance at 1 should have only one move left
         self.bfs._not_explored = {1: [np.array([1, 0])]}
         DISTANCE_ONE = 1
@@ -170,4 +160,4 @@ class TestMove(unittest.TestCase):
         self.assertFalse(self.bfs._check_goal(self.bfs._get_valid_moves()))
 
     def test_goal_found(self):
-        pass
+        """given a position above the goal, move should return goal found"""
