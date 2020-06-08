@@ -15,7 +15,7 @@ class TestBfs(unittest.TestCase):
         self.goal = 99
         self.bfs = Bfs(self.position, wallgrid, self.goal)
 
-    def testMove(self):
+    def test_move(self):
         """given a wall grid with a position (0, 0)"""
         # pdb.set_trace()
         self.bfs.move()
