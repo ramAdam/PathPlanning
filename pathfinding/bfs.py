@@ -6,11 +6,13 @@ from tests.data import wallgrid as grid
 from collections.abc import MutableMapping
 
 
-class PathNotExploredDictionary(MutableMapping):
+class PathDictionary(MutableMapping):
     """a dictionary designed for path finding"""
-
+    __marker = object()
     def __init__(self, *args, **kwargs):
+
         self._not_explored = dict()
+        self._explored = set()
         self.update(dict(*args, **kwargs))
 
     def __setitem__(self, key, value):
@@ -38,12 +40,14 @@ class PathNotExploredDictionary(MutableMapping):
     def __repr__(self):
         return f"{type(self).__name__}({self._not_explored})"
 
-    def pop(self, key, default=None):
+    def pop(self, key, default=__marker):
         try:
             value = self[key]
             if len(value) == 1:
                 del self[key]
-                return value.pop()
+                idx = value.pop()
+                self._explored.add(idx)
+                return idx
             else:
                 return value.pop()
         except KeyError:

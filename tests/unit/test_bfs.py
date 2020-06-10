@@ -104,7 +104,7 @@ class TestBfsValidMoves(unittest.TestCase):
 class TestPathNotExploredDictionary(unittest.TestCase):
     def setUp(self):
         # takes a list of tuple
-        self.path = PathNotExploredDictionary({2: (np.array([1, 1]))})
+        self.path = PathDictionary({2: (np.array([1, 1]))})
 
     def test_set_item(self):
         assert len(self.path) == 1
@@ -123,15 +123,16 @@ class TestPathNotExploredDictionary(unittest.TestCase):
         assert len(self.path[3]) == 1
 
     def test_get_sorted_keys(self):
-        self.path[randint(1, 10)] = np.array([4, 1])
-        self.path[randint(4, 10)] = np.array([5, 1])
+        key1 = randint(1, 10)
+        key2 = randint(4, 10)
+        self.path[key1] = np.array([4, 1])
+        self.path[key2] = np.array([5, 1])
 
         keys = self.path.keys()
         # assert len(keys) == 3
 
         assert keys[0] < keys[1]
-
-        assert keys[-1] > keys[1]
+        assert keys[-1] > keys[0]
 
     def test_pop_last_item(self):
         # pdb.set_trace()
@@ -151,3 +152,24 @@ class TestPathNotExploredDictionary(unittest.TestCase):
         assert len(self.path[key]) == 1
 
         assert np.array_equal(value, (4, 1))
+
+        # self.path.pop(key)
+
+    def test_pop_item_in_explored(self):
+        key = 6
+        self.path[key] = np.array([5, 1])
+
+        self.path.pop(key)
+        assert key not in self.path
+
+        assert len(self.path._explored) == 1
+
+    def test_pop_key_error(self):
+        """raises keyError exception if the key is not in path"""
+        key = 12
+        self.assertRaises(KeyError, self.path.pop, key)
+
+    def test_pop_default_returns(self):
+        key = 12
+        assert self.path.pop(key, 'finish') == 'finish'
+        assert self.path.pop(key, None) == None
