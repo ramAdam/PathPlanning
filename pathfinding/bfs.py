@@ -6,7 +6,7 @@ from tests.data import wallgrid as grid
 from collections.abc import MutableMapping
 
 
-class PathDictionary(MutableMapping):
+class BfsPathDictionary(MutableMapping):
     """a dictionary designed for path finding"""
     __marker = object()
     def __init__(self, *args, **kwargs):
@@ -43,13 +43,16 @@ class PathDictionary(MutableMapping):
     def pop(self, key, default=__marker):
         try:
             value = self[key]
+            idx = None
             if len(value) == 1:
                 del self[key]
                 idx = value.pop()
                 self._explored.add(idx)
                 return idx
             else:
-                return value.pop()
+                idx = value.pop()
+                self._explored.add(idx)
+                return idx
         except KeyError:
             if default is self.__marker:
                 raise
@@ -123,8 +126,8 @@ class Bfs:
 
     def __init__(self, position, grid, goal):
         self._position = position
-        self._explored = {tuple(self._position)}
-        self._not_explored = dict()
+        self._path = BfsPathDictionary()
+        self._path._explored.add(tuple(self._position))
         self._goal_found = False
         self._goal = goal
         self._grid = grid
@@ -152,24 +155,19 @@ class Bfs:
     def _pick_a_move_from(self, valid_moves, distance):
         """returns a valid move, also updates not_explored and explored"""
         picked_move = None
-        if len(valid_moves) == 1:
-            picked_move = self._not_explored.pop(distance).pop()
-            self._explored.add(picked_move)
-        else:
-            picked_move = self._not_explored[distance].pop()
-            self._explored.add(picked_move)
+        picked_move = self._path.pop(distance)
 
         return picked_move
 
     def _pick_moves_at(self, min_distance):
         """returns a list of move at a given distance"""
-        return self._not_explored[min_distance]
+        return self._path[min_distance]
 
     def _get_min_distance_key(self):
         """ returns None if there are no elments left in not_explored otherwise returns the next
             minimum key
         """
-        return next(iter(sorted(self._not_explored.keys())), None)
+        return next(iter(self._path.keys()), None)
 
     def _check_goal(self, valid_moves):
         """return the position of the goal if goal found, also sets the goal_found to be True"""
@@ -190,7 +188,7 @@ class Bfs:
 
     def _get_valid_moves(self):
         valid_moves = self._bfs_moves.get_valid_moves(
-            self._position, self._explored)
+            self._position, self._path._explored)
         return valid_moves
 
     def set_distance_all_valid_moves(self, valid_moves_idx):
@@ -203,16 +201,11 @@ class Bfs:
 
         """
         temPos = None
-        # ds = {}
         for move in valid_moves_idx:
             temPos = self._position + move
             key = self._get_distance(temPos)
 
-            if key not in self._not_explored:
-                self._not_explored[key] = set()
-                self._not_explored.get(key).add(tuple(temPos))
-            else:
-                self._not_explored.get(key).add(tuple(temPos))
+            self._path[key] = temPos
 
     def _get_distance(self, temPos):
         """ returns a distance from position [0, 0]"""

@@ -8,20 +8,22 @@ from tests.data import wallgrid
 class TestBfs(unittest.TestCase):
 
     def setUp(self):
-        self.position = np.array([0, 0])
+        position = np.array([0, 0])
         self.goal = 99
-        self.bfs = Bfs(self.position, wallgrid, self.goal)
+        self.bfs = Bfs(position, wallgrid, self.goal)
 
     def test_move(self):
         """given a wall grid with a position (0, 0)"""
 
+        # pdb.set_trace()
         self.bfs.move()
         assert self.bfs._goal_found == False
         assert np.array_equal(self.bfs._position, np.array([0, 1]))
         # at distance one there should be only one position left
-        assert len(self.bfs._not_explored[1]) == 1
+        # pdb.set_trace()
+        assert len(self.bfs._path._not_explored[1]) == 1
         # at distance 1 there should be 2 explored positions
-        assert len(self.bfs._explored) == 2
+        assert len(self.bfs._path._explored) == 2
 
     def test_goal_position(self):
         """given goal 99 is at position (7 7), bfs position should be set to (7, 7)"""

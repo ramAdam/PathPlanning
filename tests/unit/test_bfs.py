@@ -14,20 +14,23 @@ class TestBfs(unittest.TestCase):
 
     def test_min_distance_dictionary(self):
         self.bfs.move()
-        assert len(self.bfs._not_explored) == 1
+        assert len(self.bfs._path) == 1
 
         self.assertEqual(self.bfs._get_min_distance_key(), 1)
 
     def test_min_distance_empty_error(self):
         """min distance should return zero if the not_explored dictionary is empty"""
-        assert len(self.bfs._not_explored) == 0
+        assert len(self.bfs._path._not_explored) == 0
         self.assertEqual(self.bfs._get_min_distance_key(), None)
 
     def test_pick_moves_at_a_given_distance(self):
         """pick min moves should return 2 valid moves at a distance 1"""
-        self.bfs._not_explored = {1: [np.array([1, 0]), np.array([0, 1])]}
+        self.bfs._path_not_explored = {1: [np.array([1, 0]), np.array([0, 1])]}
 
-        assert len(self.bfs._not_explored[1]) == 2
+        self.bfs._path[1] = np.array([1, 0])
+        self.bfs._path[1] = np.array([0, 1])
+
+        assert len(self.bfs._path.get(1)) == 2
         MIN_DISTANCE = self.bfs._get_min_distance_key()
 
         assert MIN_DISTANCE == 1
@@ -44,7 +47,7 @@ class TestBfs(unittest.TestCase):
         # given distance at 1 should have only one move left
         s = set()
         s.add(tuple(np.array([1, 0])))
-        self.bfs._not_explored = {1: s}
+        self.bfs._path._not_explored = {1: s}
         DISTANCE_ONE = 1
         ZERO = 0
         TWO = 2
@@ -56,8 +59,8 @@ class TestBfs(unittest.TestCase):
         self.assertTrue(np.array_equal(self.bfs._pick_a_move_from(
             valid_moves, min_distance), np.array([1, 0])))
 
-        LENGTH_OF_NOT_EXPLORED = len(self.bfs._not_explored)
-        LENGTH_OF_EXPLORED = len(self.bfs._explored)
+        LENGTH_OF_NOT_EXPLORED = len(self.bfs._path)
+        LENGTH_OF_EXPLORED = len(self.bfs._path._explored)
 
         assert LENGTH_OF_NOT_EXPLORED == ZERO
         # pdb.set_trace()
@@ -96,7 +99,7 @@ class TestBfsValidMoves(unittest.TestCase):
 
     def test_bfs_get_valid_moves(self):
         valid_moves = self.bfs_algo.get_valid_moves(
-            self.bfs._position, self.bfs._explored)
+            self.bfs._position, self.bfs._path._explored)
 
         assert len(valid_moves) == 2
 
@@ -104,7 +107,7 @@ class TestBfsValidMoves(unittest.TestCase):
 class TestPathNotExploredDictionary(unittest.TestCase):
     def setUp(self):
         # takes a list of tuple
-        self.path = PathDictionary({2: (np.array([1, 1]))})
+        self.path = BfsPathDictionary({2: (np.array([1, 1]))})
 
     def test_set_item(self):
         assert len(self.path) == 1
