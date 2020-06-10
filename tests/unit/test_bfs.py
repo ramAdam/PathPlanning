@@ -2,107 +2,15 @@ import unittest
 import numpy as np
 from pathfinding import *
 import pdb
-from tests.data import grid
+from tests.data import grid, wallgrid
+from random import randint
 
 
-class TestValidMoves(unittest.TestCase):
-    def setUp(self):
-        self.u = np.array([-1, 0])  # up
-        self.d = np.array([1, 0])  # down
-        self.r = np.array([0, 1])  # left
-        self.l = np.array([0, -1])  # right
-        self.empty_explored = []
-
-    def test_get_valid_moves_position_zero_zero(self):
-        explored = [np.array([0, 0])]
-        position = np.array([0, 0])
-        expected_moves = np.array([self.d, self.r])
-        expected_number_of_moves = len(expected_moves)
-
-        self.expectedMovesEqualsValidMoves(position, expected_moves,
-                                           expected_number_of_moves, explored)
-
-    def test_position_0_1_with_explored_pos_0_0_should_return_right(self):
-        """Should return one expected valid move, right only"""
-        explored = [np.array([0, 0])]
-        expected_moves = np.array([self.r])
-
-        self.expectedMovesEqualsValidMoves(np.array([0, 1]), expected_moves, len(
-            expected_moves), explored)
-
-    def test_get_valid_moves_position_nine_nine(self):
-        position = np.array([9, 9])
-        expected_moves = np.array([self.u, self.l])
-        expected_number_of_moves = len(expected_moves)
-
-        self.expectedMovesEqualsValidMoves(position, expected_moves,
-                                           expected_number_of_moves, self.empty_explored)
-
-    def test_get_valid_moves_position_six_six_should_return_4_moves(self):
-        position = np.array([6, 6])
-        expected_moves = np.array([self.u, self.d, self.r, self.l])
-        expected_number_of_moves = len(expected_moves)
-
-        self.expectedMovesEqualsValidMoves(position, expected_moves,
-                                           expected_number_of_moves, self.empty_explored)
-
-    def test_walls_position_zero_two_should_return_2_expected_moves(self):
-        position = np.array([0, 2])
-        expected_moves = np.array([self.r, self.l])
-        expected_number_of_moves = len(expected_moves)
-
-        self.expectedMovesEqualsValidMoves(position, expected_moves,
-                                           expected_number_of_moves, self.empty_explored)
-
-    def expectedMovesEqualsValidMoves(self, position, expected_moves, exp_num_of_moves, exp):
-        test_moves = get_valid_moves(moves, position, grid, exp)
-        assert len(test_moves) == exp_num_of_moves
-        self.assertTrue(np.array_equal(test_moves, expected_moves))
-
-
-class TestDistance(unittest.TestCase):
-    def setUp(self):
-        self.position = np.array([4, 4])
-        self.empty_explored = []
-        self.valid_moves = get_valid_moves(
-            moves, self.position, grid, self.empty_explored)
-
-    def test_position_4_4_should_have_4_valid_moves(self):
-        assert len(self.valid_moves) == 4
-
-    def test_position_4_4_should_have_distance_8(self):
-        distance = get_distance(self.position)  # return {}
-        self.assertEqual(distance, 8)
-
-    def test_position_4_4_at_distance_7_should_have_2_valid_moves(self):
-        """ distance dictionary should have {7:[[4, 3]. [3, 4]], 9:[[4, 5], [5, 4]]}"""
-        ds = get_distance_all_valid_moves(self.valid_moves, self.position)
-        self.assertEqual(len(ds), 2)
-        self.assertEqual(len(ds[7]), 2)
-
-
-class TestIsInExplored(unittest.TestCase):
-    def setUp(self):
-        self.exp = [np.array([0, 0]), np.array([1, 1])]
-
-    def test_position_exist_in_explored_should_return_true(self):
-        position = np.array([0, 0])
-
-        self.assertTrue(isin_explored(position, self.exp))
-
-    def test_position_in_expolored_should_return_false(self):
-        position = np.array([2, 1])
-        self.assertFalse(isin_explored(position, self.exp))
-
-
-class TestMove(unittest.TestCase):
+class TestBfs(unittest.TestCase):
     def setUp(self):
         self.position = np.array([0, 0])
-        self.explored = [np.array([0, 0])]
-        self.not_explored = {}
-        self.goal_found = False
         self.goal = 99
-        self.bfs = Bfs(self.position, grid, self.goal)
+        self.bfs = Bfs(self.position, wallgrid, self.goal)
 
     def test_min_distance_dictionary(self):
         self.bfs.move()
@@ -163,5 +71,83 @@ class TestMove(unittest.TestCase):
         self.bfs._position = np.array([0, 0])
         self.assertFalse(self.bfs._check_goal(self.bfs._get_valid_moves()))
 
-    def test_goal_found(self):
-        """given a position above the goal, move should return goal found"""
+    def test_check_goal_position_below(self):
+        """given a position above the goal, check goal should return goal position"""
+        self.bfs._position = np.array([6, 7])
+        goal_position = self.bfs._check_goal(self.bfs._get_valid_moves())
+
+        self.assertTrue(np.array_equal(goal_position, np.array([7, 7])))
+
+    def test_check_goal(self):
+        """given position is a goal, check goal should return the position"""
+
+        self.bfs._position = np.array([7, 7])
+        goal_position = self.bfs._check_goal(self.bfs._get_valid_moves())
+
+        self.assertTrue(np.array_equal(goal_position, self.bfs._position))
+
+
+class TestBfsValidMoves(unittest.TestCase):
+    def setUp(self):
+        self.position = np.array([0, 0])
+        self.goal = 99
+        self.bfs = Bfs(self.position, wallgrid, self.goal)
+        self.bfs_algo = BfsValidMoves(self.bfs._grid.shape)
+
+    def test_bfs_get_valid_moves(self):
+        valid_moves = self.bfs_algo.get_valid_moves(
+            self.bfs._position, self.bfs._explored)
+
+        assert len(valid_moves) == 2
+
+
+class TestPathNotExploredDictionary(unittest.TestCase):
+    def setUp(self):
+        # takes a list of tuple
+        self.path = PathNotExploredDictionary({2: (np.array([1, 1]))})
+
+    def test_set_item(self):
+        assert len(self.path) == 1
+        assert len(self.path[2]) == 1
+        assert isinstance(self.path[2], (set))
+
+        self.path[2] = np.array([2, 2])
+
+        assert len(self.path[2]) == 2
+
+    def test_key_not_in_dictionary(self):
+        """should add the key with a value, if the key
+            does not exist"""
+        self.path[3] = np.array([2, 1])
+
+        assert len(self.path[3]) == 1
+
+    def test_get_sorted_keys(self):
+        self.path[randint(1, 10)] = np.array([4, 1])
+        self.path[randint(4, 10)] = np.array([5, 1])
+
+        keys = self.path.keys()
+        # assert len(keys) == 3
+
+        assert keys[0] < keys[1]
+
+        assert keys[-1] > keys[1]
+
+    def test_pop_last_item(self):
+        # pdb.set_trace()
+        key = 4
+        self.path[key] = np.array([2, 2])
+        value = self.path.pop(4)
+        assert np.array_equal(value, (2, 2))
+
+        assert key not in self.path
+
+    def test_pop_item(self):
+        key = 5
+        self.path[key] = np.array([4, 1])
+        self.path[key] = np.array([1, 4])
+        assert len(self.path[key]) == 2
+        value = self.path.pop(key)
+        assert len(self.path[key]) == 1
+
+        assert np.array_equal(value, (4, 1))

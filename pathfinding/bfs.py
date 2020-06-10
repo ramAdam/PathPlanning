@@ -1,87 +1,118 @@
+import copy
 import numpy as np
 import pdb
+import abc
 from tests.data import wallgrid as grid
+from collections.abc import MutableMapping
 
 
-moves = {
-    "u": np.array([-1, 0]),
-    "d": np.array([1, 0]),
-    "r": np.array([0, 1]),
-    "l": np.array([0, -1]),
-}
-# explored = [np.array([0, 0])]
+class PathNotExploredDictionary(MutableMapping):
+    """a dictionary designed for path finding"""
 
+    def __init__(self, *args, **kwargs):
+        self._not_explored = dict()
+        self.update(dict(*args, **kwargs))
 
-def isin_explored(position, explored):
-    flag = False
-    for e in explored:
-        if np.array_equal(position, e):
-            return True
-    return flag
+    def __setitem__(self, key, value):
+        if not isinstance(value, (np.ndarray,)):
+            raise ValueError("value is not instance of numpy array")
 
-
-def get_valid_moves(moves, position, grid, explored):
-    """
-    This function takes a dictionary of moves, position, explored positions and returns valid moves
-
-    Parameters
-    ----------
-    moves : dict
-    Dictionary of `moves` with keys u, d, l, r with a numpy array mapped to it.
-    y
-    Description of parameter `y` (with type not specified)
-    """
-    ROW_IDX = 0
-    COL_IDX = 1
-    WALL = 1
-    pos = None
-    valid_moves = []
-    for _, move in moves.items():
-        pos = move + position
-        # checking row and column bounds and walls, adding valid moves only
-        if (
-            pos[ROW_IDX] >= 0
-            and pos[ROW_IDX] <= 9
-            and pos[COL_IDX] >= 0
-            and pos[COL_IDX] <= 9
-            and grid[pos[ROW_IDX], pos[COL_IDX]] != WALL
-            and not isin_explored(pos, explored)
-        ):
-            valid_moves.append(move)
-
-    return np.array(valid_moves)
-
-
-def get_distance(position):
-    """ returns a distance from position [0, 0]"""
-    return position[0] + position[1]
-
-
-def get_distance_all_valid_moves(valid_moves, position):
-    """This function return a dictionary of possible moves
-        at a position with their corresponding distance as keys
-    """
-    temPos = None
-    ds = {}
-    for move in valid_moves:
-        temPos = position + move
-        key = get_distance(temPos)
-        if key not in ds:
-            ds[key] = []
-            ds.get(key).append(temPos)
+        if key not in self._not_explored:
+            self._not_explored[key] = set()
+            self._not_explored.get(key).add(tuple(value))
         else:
-            ds.get(key).append(temPos)
+            self._not_explored.get(key).add(tuple(value))
 
-    return ds
+    def __getitem__(self, key):
+        return self._not_explored[key]
+
+    def __delitem__(self, key):
+        del self._not_explored[key]
+
+    def __iter__(self):
+        return iter(self._not_explored)
+
+    def __len__(self):
+        return len(self._not_explored)
+
+    def __repr__(self):
+        return f"{type(self).__name__}({self._not_explored})"
+
+    def pop(self, key, default=None):
+        try:
+            value = self[key]
+            if len(value) == 1:
+                del self[key]
+                return value.pop()
+            else:
+                return value.pop()
+        except KeyError:
+            if default is self.__marker:
+                raise
+            return default
+
+    def keys(self):
+        """returns keys in ascending order"""
+        return sorted(self._not_explored.keys())
 
 
-def update_not_explored(main_not_explored, not_explored):
-    pass
+class PathFindingAlgorithm(metaclass=abc.ABCMeta):
+    @classmethod
+    def __subclasshook__(cls, subclass):
+        return(hasattr(subclass, get_valid_moves) and callable(subclass.get_valid_moves))
+
+    @abc.abstractmethod
+    def get_valid_moves(self, position, explored=None):
+        raise NotImplementedError
 
 
-def move(position, explored, main_not_explored, goal_found, grid):
-    v_moves = get_valid_moves(moves, position, grid, explored)
-    not_explored = get_distance_all_valid_moves(v_moves, position)
+class BfsValidMoves(PathFindingAlgorithm):
+    """Valid moves for breath first search"""
+
+    def __init__(self, grid_shape):
+        self._grid_shape = grid_shape
+        self._moves = [
+            np.array([-1, 0]),
+            np.array([1, 0]),
+            np.array([0, 1]),
+            np.array([0, -1]),
+        ]
+        self._valid_moves = []
+
+    def get_valid_moves(self, position, explored) -> list:
+        """
+        This function takes position, set of explored positions and returns valid moves
+
+        Parameters
+        ----------
+        position : np.array
+        Dictionary of `moves` with keys u, d, l, r with a numpy 2D array mapped [-1, 0], [1, 0], [0, -1], [0, 1].
+        y
+        Description of parameter `y` (with type not specified)
+        """
+        ROW_IDX = 0
+        COL_IDX = 1
+        WALL = 1
+        # grid row end index
+        ROW_END_IDX = self._grid_shape[0] - 1
+        # grid col end index
+        COL_END_IDX = self._grid_shape[1] - 1
+
+        self._valid_moves.clear()
+        for move in self._moves:
+            pos_idx = move + position
+            # checking row and column bounds and walls, adding valid moves only
+
+            if (
+                pos_idx[ROW_IDX] >= 0
+                and pos_idx[ROW_IDX] <= ROW_END_IDX
+                and pos_idx[COL_IDX] >= 0
+                and pos_idx[COL_IDX] <= COL_END_IDX
+                and grid[pos_idx[ROW_IDX], pos_idx[COL_IDX]] != WALL
+                and tuple(pos_idx) not in explored
+            ):
+                self._valid_moves.append(move)
+        return copy.copy(self._valid_moves)
 
 
 class Bfs:
@@ -93,10 +124,12 @@ class Bfs:
         self._goal_found = False
         self._goal = goal
         self._grid = grid
+        self._bfs_moves = BfsValidMoves(self._grid.shape)
 
     def move(self):
         """returns None if all positions are explored and goal is not found"""
         valid_moves = self._get_valid_moves()
+
         found = self._check_goal(valid_moves)
 
         if found is not None:
@@ -152,39 +185,8 @@ class Bfs:
         return None
 
     def _get_valid_moves(self):
-        """
-        This function takes a dictionary of moves, position, explored positions and returns valid moves
-
-        Parameters
-        ----------
-        moves : dict
-        Dictionary of `moves` with keys u, d, l, r with a numpy 2D array mapped [-1, 0], [1, 0], [0, -1], [0, 1].
-        y
-        Description of parameter `y` (with type not specified)
-        """
-        ROW_IDX = 0
-        COL_IDX = 1
-        WALL = 1
-        pos = None
-        moves = {
-            "u": np.array([-1, 0]),
-            "d": np.array([1, 0]),
-            "r": np.array([0, 1]),
-            "l": np.array([0, -1]),
-        }
-        valid_moves = []
-        for _, move in moves.items():
-            pos_idx = move + self._position
-            # checking row and column bounds and walls, adding valid moves only
-            if (
-                pos_idx[ROW_IDX] >= 0
-                and pos_idx[ROW_IDX] <= 9
-                and pos_idx[COL_IDX] >= 0
-                and pos_idx[COL_IDX] <= 9
-                and grid[pos_idx[ROW_IDX], pos_idx[COL_IDX]] != WALL
-                and tuple(pos_idx) not in self._explored
-            ):
-                valid_moves.append(move)
+        valid_moves = self._bfs_moves.get_valid_moves(
+            self._position, self._explored)
         return valid_moves
 
     def set_distance_all_valid_moves(self, valid_moves_idx):
@@ -211,10 +213,3 @@ class Bfs:
     def _get_distance(self, temPos):
         """ returns a distance from position [0, 0]"""
         return temPos[0] + temPos[1]
-
-    def _isin(self, position, explored):
-        flag = False
-        for e in explored:
-            if np.array_equal(position, e):
-                return True
-        return flag

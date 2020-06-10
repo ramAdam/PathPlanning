@@ -9,15 +9,12 @@ class TestBfs(unittest.TestCase):
 
     def setUp(self):
         self.position = np.array([0, 0])
-        self.explored = [np.array([0, 0])]
-        # self.not_explored = {}
-        self.goal_found = False
         self.goal = 99
         self.bfs = Bfs(self.position, wallgrid, self.goal)
 
     def test_move(self):
         """given a wall grid with a position (0, 0)"""
-        # pdb.set_trace()
+
         self.bfs.move()
         assert self.bfs._goal_found == False
         assert np.array_equal(self.bfs._position, np.array([0, 1]))
@@ -37,7 +34,6 @@ class TestBfs(unittest.TestCase):
     def test_goal_found(self):
         "given goal 99 in the grid, it should find the goal"
         while not self.bfs._goal_found:
-            # pdb.set_trace()
             self.bfs.move()
 
         assert self.bfs._goal_found == True
