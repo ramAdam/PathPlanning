@@ -134,23 +134,23 @@ class Bfs:
         self._bfs_moves = BfsValidMoves(self._grid.shape)
 
     def move(self):
-        """returns None if all positions are explored and goal is not found"""
+        """changes the position to next valid position until the goal is found or search is exhausted"""
         valid_moves = self._get_valid_moves()
 
         found = self._check_goal(valid_moves)
 
         if found is not None:
+            self._goal_found = True
             self._position = found
-            return found
+            return
 
         self.set_distance_all_valid_moves(valid_moves)
 
         min_distance = self._get_min_distance_key()
-        if min_distance is None:
-            return None
-        movs = self._pick_moves_at(min_distance)
-        picked_move = self._pick_a_move_from(movs, min_distance)
-        self._position = picked_move
+        if min_distance is not None:
+            movs = self._pick_moves_at(min_distance)
+            picked_move = self._pick_a_move_from(movs, min_distance)
+            self._position = picked_move
 
     def _pick_a_move_from(self, valid_moves, distance):
         """returns a valid move, also updates not_explored and explored"""
@@ -182,7 +182,7 @@ class Bfs:
             temPos = self._position + move
 
             if self._grid[temPos[0], temPos[1]] == self._goal:
-                self._goal_found = True
+
                 return temPos
         return None
 
@@ -210,3 +210,29 @@ class Bfs:
     def _get_distance(self, temPos):
         """ returns a distance from position [0, 0]"""
         return temPos[0] + temPos[1]
+
+
+class GoalSearch:
+    def __init__(self, searchAlgo: Bfs):
+        self._searchAlgo = searchAlgo
+        self._end_bounds = self._get_grid_bounds(self._searchAlgo._grid.shape)
+        self._position = None
+
+    def find(self) -> bool:
+        """returns True if the goal is found, false otherwise"""
+        flag = True
+        while flag:
+            self._searchAlgo.move()
+            #
+            if tuple(self._searchAlgo._position) == self._end_bounds and not self._searchAlgo._goal_found:
+                self._position = tuple(self._searchAlgo._position)
+                return False
+            elif self._searchAlgo._goal_found:
+                self._position = tuple(self._searchAlgo._position)
+                return True
+
+    def _get_grid_bounds(self, shape: tuple) -> tuple:
+        bounds = list()
+        for bound in shape:
+            bounds.append(bound - 1)
+        return tuple(bounds)
